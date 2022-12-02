@@ -1,6 +1,7 @@
 import java.util.*;
 
 import static java.lang.Double.NaN;
+import static java.lang.Double.valueOf;
 import static java.lang.Math.pow;
 
 
@@ -39,7 +40,24 @@ public class Calculator {
 
     double evalPostfix(List<String> postfix) {
         // TODO
-        return 0;
+        Stack<Double> result = new Stack<>();
+
+        for (String current : postfix){
+            if (isOperator(current)){
+                double d1 = result.pop();
+                double d2 = result.pop();
+
+                result.push(applyOperator(current, d1, d2));
+            } else {
+                result.push(valueOf(current));
+            }
+        }
+
+        if (result.size() != 1){
+
+            throw new RuntimeException("fel vid evaluering");
+        }
+        return result.peek();
     }
 
     double applyOperator(String op, double d1, double d2) {
@@ -62,27 +80,43 @@ public class Calculator {
     }
 
     // ------- Infix 2 Postfix ------------------------
-
     List<String> infix2Postfix(List<String> infix) {
-         // TODO
-        Stack<String> operators = new Stack();
-        List<String> postfix = new ArrayList();
-        for (String current : infix)
-                if (this.isOperator(current)) {
-                    while(!operators.empty() && this.hasLowerPrecedence(current, (String)operators.peek())) {
-                        postfix.add((String)operators.pop());
-                    }
+        Stack<String> operators = new Stack<>();
+        List<String> postfix = new ArrayList<>();
 
-                    operators.push(current);
-                } else
-                    postfix.add(current);
+        for (String current : infix) {
+            if (this.isOperator(current)) {
+                while (!operators.empty() && !isRight((String) operators.peek()) && this.hasLowerPrecedence(current, (String) operators.peek())) {
+                    postfix.add((String) operators.pop());
+                }
 
-            while(!operators.empty()) {
+                operators.push(current);
+            } else if (isRight(current)) {
+                operators.push(current);
+            } else if (isLeft(current)) {
+                doStuff(operators, postfix);
+            } else {
+                postfix.add(current);
+            }
+        }
+
+        while(!operators.empty()) {
+            postfix.add((String)operators.pop());
+        }
+
+        return postfix;
+    }
+
+    void doStuff (Stack<String> operators, List<String> postfix) { // annars testa att bara ta bort änd-parantes
+        while (!operators.empty()) {
+            if (isRight(operators.peek()))  {
+                operators.pop();
+                return;
+            } else {
                 postfix.add((String)operators.pop());
             }
-
-            return postfix;
         }
+    }
 
 
     boolean isOperator(String op) {
@@ -90,36 +124,16 @@ public class Calculator {
     }
 
     boolean hasLowerPrecedence(String op1, String op2) {
-
-
         return this.getPrecedence(op1) <= this.getPrecedence(op2);
     }
-    boolean isleft(char ch) {
-        switch (ch) {
-            case '(':
-                return true;
-            case '[':
-                return true;
-            case '{':
-                return true;
-            default:
-                return false;
-        }
-    }
-    boolean isRight(char ch) {
-        switch (ch) {
-            case ')':
-                return true;
-            case ']':
-                return true;
-            case '}':
-                return true;
-            default:
-                return false;
-        }
+
+    boolean isRight(String str) {
+        return Objects.equals(str, "(");
     }
 
-
+    boolean isLeft(String str) {
+        return Objects.equals(str, ")");
+    }
 
 
     int getPrecedence(String op) {

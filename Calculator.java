@@ -80,16 +80,15 @@ public class Calculator {
     }
 
     // ------- Infix 2 Postfix ------------------------
-    List<String> infix2Postfix(List<String> infix) {
+    /*List<String> infix2Postfix(List<String> infix) {
         Stack<String> operators = new Stack<>();
         List<String> postfix = new ArrayList<>();
 
         for (String current : infix) {
             if (this.isOperator(current)) {
-                while (!operators.empty() && !isRight((String) operators.peek()) && this.hasLowerPrecedence(current, (String) operators.peek())) {
+                while (!operators.empty() && !isRight((String) operators.peek()) && (getAssociativity(current) == Assoc.LEFT) && this.hasLowerPrecedence(current, (String) operators.peek())) {
                     postfix.add((String) operators.pop());
                 }
-
                 operators.push(current);
             } else if (isRight(current)) {
                 operators.push(current);
@@ -105,15 +104,41 @@ public class Calculator {
         }
 
         return postfix;
+    }*/
+
+    List<String> infix2Postfix(List<String> infix) {
+        Stack<String> operators = new Stack<>();
+        List<String> postfix = new ArrayList<>();
+
+        for (String current : infix) {
+            if (isRight(current)) {
+                operators.push(current);
+            } else if (isLeft(current)) {
+                doStuff(operators, postfix);
+            } else if (this.isOperator(current)) {
+                while (!operators.empty() && !isRight(operators.peek()) && hasLowerPrecedence(current, operators.peek())) { // modified hasLowerPrecedence to onl return true if current associativity is left, namechange may be in order..?
+                    postfix.add(operators.pop());
+                }
+                operators.push(current);
+            } else {
+                postfix.add(current);
+            }
+        }
+
+        while(!operators.empty()) {
+            postfix.add(operators.pop());
+        }
+
+        return postfix;
     }
 
-    void doStuff (Stack<String> operators, List<String> postfix) { // annars testa att bara ta bort änd-parantes
+    void doStuff (Stack<String> operators, List<String> postfix) {
         while (!operators.empty()) {
             if (isRight(operators.peek()))  {
                 operators.pop();
                 return;
             } else {
-                postfix.add((String)operators.pop());
+                postfix.add(operators.pop());
             }
         }
     }
@@ -124,7 +149,7 @@ public class Calculator {
     }
 
     boolean hasLowerPrecedence(String op1, String op2) {
-        return this.getPrecedence(op1) <= this.getPrecedence(op2);
+        return (getPrecedence(op1) <= getPrecedence(op2) && getAssociativity(op1) == Assoc.LEFT);
     }
 
     boolean isRight(String str) {
@@ -198,11 +223,9 @@ public class Calculator {
                 sentence = new StringBuilder();
                 numbers.add(String.valueOf(str.charAt(i)));
             }
-        //numbers.add(sentence.toString());
-        //return numbers;
+            //numbers.add(sentence.toString());
+            //return numbers;
         }
         numbers.add(sentence.toString());
     }
 }
-
-
